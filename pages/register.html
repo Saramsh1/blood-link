@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Register as Donor — Blood Link</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+  :root{--crimson:#C0152A;--crimson-light:#E8304A;--blood-deep:#1A0508;--off-white:#FAF7F4;--text-muted:#7A6B65;--success:#1A7A4A;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:var(--blood-deep);color:var(--off-white);min-height:100vh;padding:2rem;}
+  body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 60% at 70% 30%,rgba(192,21,42,0.1) 0%,transparent 60%);pointer-events:none;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:3rem;position:relative;z-index:1;}
+  .logo{font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--off-white);text-decoration:none;display:flex;align-items:center;gap:.5rem;}
+  .logo-drop{width:20px;height:20px;background:var(--crimson);clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);}
+  .back-link{color:#A09088;font-size:.88rem;text-decoration:none;display:flex;align-items:center;gap:.3rem;}
+  .back-link:hover{color:var(--off-white);}
+  .main{position:relative;z-index:1;max-width:720px;margin:0 auto;}
+  .page-title{font-family:'DM Serif Display',serif;font-size:2.2rem;margin-bottom:.4rem;}
+  .page-sub{color:#A09088;font-size:.95rem;margin-bottom:2.5rem;}
+  .progress-bar{display:flex;gap:.5rem;margin-bottom:2.5rem;}
+  .prog-step{flex:1;height:3px;background:rgba(255,255,255,.1);border-radius:2px;transition:background .4s;}
+  .prog-step.done{background:var(--success);}
+  .prog-step.active{background:var(--crimson);}
+  .form-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:2rem;margin-bottom:1.5rem;}
+  .card-title{font-weight:600;font-size:1rem;margin-bottom:1.4rem;display:flex;align-items:center;gap:.6rem;color:var(--off-white);}
+  .card-title span{background:var(--crimson);width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;}
+  .form-group{margin-bottom:1rem;}
+  .form-group:last-child{margin-bottom:0;}
+  label{display:block;font-size:.78rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#A09088;margin-bottom:.45rem;}
+  input,select,textarea{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:.7rem .9rem;color:var(--off-white);font-size:.92rem;font-family:'DM Sans',sans-serif;transition:border-color .2s;}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--crimson);}
+  input::placeholder{color:#4A3D3A;}
+  select option{background:#1A0508;}
+  textarea{resize:vertical;min-height:80px;}
+  .checkbox-group{display:flex;flex-direction:column;gap:.5rem;}
+  .checkbox-item{display:flex;align-items:center;gap:.6rem;font-size:.9rem;cursor:pointer;}
+  .checkbox-item input[type=checkbox]{width:16px;height:16px;accent-color:var(--crimson);}
+  .eligibility-preview{background:rgba(192,21,42,.08);border:1px solid rgba(192,21,42,.25);border-radius:8px;padding:1rem 1.2rem;margin-top:1rem;display:none;}
+  .elig-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:#A09088;margin-bottom:.4rem;}
+  .elig-status{font-size:1rem;font-weight:600;}
+  .elig-status.ok{color:#4ADE80;}
+  .elig-status.warn{color:#FBBF24;}
+  .elig-status.fail{color:var(--crimson-light);}
+  .btn-submit{width:100%;background:var(--crimson);color:white;border:none;padding:.9rem;border-radius:6px;font-size:.95rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;margin-top:1rem;}
+  .btn-submit:hover{background:var(--crimson-light);transform:translateY(-1px);}
+  .success-box{display:none;background:rgba(26,122,74,.15);border:1px solid rgba(26,122,74,.35);border-radius:12px;padding:2rem;text-align:center;}
+  .success-box h3{font-family:'DM Serif Display',serif;font-size:1.8rem;margin-bottom:.6rem;}
+  .success-box p{color:#A09088;font-size:.92rem;}
+  @media(max-width:600px){.form-row{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="../index.html" class="logo"><div class="logo-drop"></div>BloodLink</a>
+  <a href="login.html" class="back-link">← Back to Login</a>
+</div>
+<div class="main">
+  <div class="page-title">Register as a Donor</div>
+  <div class="page-sub">Fill in your health information. Our AI will assess your eligibility instantly.</div>
+  <div class="progress-bar">
+    <div class="prog-step active" id="p1"></div>
+    <div class="prog-step" id="p2"></div>
+    <div class="prog-step" id="p3"></div>
+  </div>
+
+  <div id="reg-form">
+    <!-- Personal Info -->
+    <div class="form-card">
+      <div class="card-title"><span>1</span> Personal Information</div>
+      <div class="form-row">
+        <div class="form-group"><label>First Name</label><input type="text" id="fname" placeholder="Saramsh"/></div>
+        <div class="form-group"><label>Last Name</label><input type="text" id="lname" placeholder="Puri"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Email</label><input type="email" id="email" placeholder="donor@email.com"/></div>
+        <div class="form-group"><label>Phone</label><input type="tel" id="phone" placeholder="+60-12-345-6789"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Password</label><input type="password" id="password" placeholder="••••••••"/></div>
+        <div class="form-group"><label>Confirm Password</label><input type="password" id="confirm" placeholder="••••••••"/></div>
+      </div>
+      <div class="form-group"><label>Address / Location</label><input type="text" id="address" placeholder="Kuala Lumpur, Malaysia"/></div>
+    </div>
+
+    <!-- Health Info -->
+    <div class="form-card">
+      <div class="card-title"><span>2</span> Health Information</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Blood Type</label>
+          <select id="blood_type">
+            <option value="">Select...</option>
+            <option>A+</option><option>A-</option>
+            <option>B+</option><option>B-</option>
+            <option>AB+</option><option>AB-</option>
+            <option>O+</option><option>O-</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Age</label><input type="number" id="age" placeholder="25" min="18" max="65" oninput="previewEligibility()"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Weight (kg)</label><input type="number" id="weight" placeholder="60" min="40" oninput="previewEligibility()"/></div>
+        <div class="form-group"><label>Hemoglobin (g/dL)</label><input type="number" id="hb" placeholder="13.5" step="0.1" oninput="previewEligibility()"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Last Donation Date</label>
+          <input type="date" id="last_donation" onchange="previewEligibility()"/>
+        </div>
+        <div class="form-group">
+          <label>Total Donations</label>
+          <input type="number" id="total_donations" placeholder="3" min="0"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Medical Conditions (select all that apply)</label>
+        <div class="checkbox-group" id="conditions">
+          <label class="checkbox-item"><input type="checkbox" value="hypertension" onchange="previewEligibility()"/> Hypertension</label>
+          <label class="checkbox-item"><input type="checkbox" value="diabetes" onchange="previewEligibility()"/> Diabetes</label>
+          <label class="checkbox-item"><input type="checkbox" value="heart_disease" onchange="previewEligibility()"/> Heart Disease</label>
+          <label class="checkbox-item"><input type="checkbox" value="hiv" onchange="previewEligibility()"/> HIV/AIDS</label>
+          <label class="checkbox-item"><input type="checkbox" value="hepatitis" onchange="previewEligibility()"/> Hepatitis B/C</label>
+          <label class="checkbox-item"><input type="checkbox" value="none" onchange="previewEligibility()"/> None of the above</label>
+        </div>
+      </div>
+
+      <!-- AI Eligibility Preview -->
+      <div class="eligibility-preview" id="elig-preview">
+        <div class="elig-label">🧠 AI Eligibility Preview</div>
+        <div class="elig-status" id="elig-status"></div>
+        <div id="elig-reason" style="font-size:.82rem;color:#A09088;margin-top:.3rem;"></div>
+      </div>
+    </div>
+
+    <button class="btn-submit" onclick="submitRegistration()">Create Donor Account →</button>
+  </div>
+
+  <div class="success-box" id="success-box">
+    <div style="font-size:3rem;margin-bottom:.8rem;">✅</div>
+    <h3>Registration Successful!</h3>
+    <p>Your account has been created. Your eligibility status has been assessed by our AI system.</p>
+    <p style="margin-top:.8rem;font-size:.85rem;" id="success-elig"></p>
+    <a href="login.html" style="display:inline-block;margin-top:1.5rem;background:var(--crimson);color:white;padding:.8rem 2rem;border-radius:6px;text-decoration:none;font-weight:600;">Proceed to Login →</a>
+  </div>
+</div>
+
+<script>
+function previewEligibility() {
+  const age = parseInt(document.getElementById('age').value) || 0;
+  const weight = parseFloat(document.getElementById('weight').value) || 0;
+  const hb = parseFloat(document.getElementById('hb').value) || 0;
+  const lastDonation = document.getElementById('last_donation').value;
+  const conditions = Array.from(document.querySelectorAll('#conditions input:checked')).map(c => c.value);
+
+  if (!age && !weight && !hb) { document.getElementById('elig-preview').style.display='none'; return; }
+
+  const issues = [];
+  if (age && (age < 18 || age > 65)) issues.push('Age must be 18–65');
+  if (weight && weight < 50) issues.push('Weight must be ≥50 kg');
+  if (hb) {
+    if (hb < 12.5) issues.push('Hemoglobin too low (<12.5 g/dL)');
+  }
+  if (lastDonation) {
+    const daysSince = (Date.now() - new Date(lastDonation)) / 86400000;
+    if (daysSince < 56) issues.push(`Last donation was ${Math.round(daysSince)} days ago (min 56 days)`);
+  }
+  const blocking = ['hiv','hepatitis','heart_disease'];
+  const hasBlocking = conditions.some(c => blocking.includes(c));
+  if (hasBlocking) issues.push('Disqualifying medical condition detected');
+
+  const preview = document.getElementById('elig-preview');
+  const status = document.getElementById('elig-status');
+  const reason = document.getElementById('elig-reason');
+  preview.style.display = 'block';
+
+  if (issues.length === 0 && age && weight && hb) {
+    status.textContent = '✓ Likely Eligible to Donate';
+    status.className = 'elig-status ok';
+    reason.textContent = 'All checked parameters meet eligibility requirements.';
+  } else if (issues.length > 0 && !hasBlocking && !(age < 18)) {
+    status.textContent = '⚠ Conditionally Ineligible';
+    status.className = 'elig-status warn';
+    reason.textContent = issues.join(' · ');
+  } else if (issues.length > 0) {
+    status.textContent = '✗ Currently Ineligible';
+    status.className = 'elig-status fail';
+    reason.textContent = issues.join(' · ');
+  }
+}
+
+function submitRegistration() {
+  const fields = ['fname','lname','email','password','blood_type','age','weight','hb'];
+  for (const f of fields) {
+    if (!document.getElementById(f).value) {
+      alert('Please fill in all required fields.');
+      return;
+    }
+  }
+  if (document.getElementById('password').value !== document.getElementById('confirm').value) {
+    alert('Passwords do not match.');
+    return;
+  }
+  // Simulate saving & AI assessment
+  const eligible = document.getElementById('elig-status')?.className?.includes('ok');
+  document.getElementById('reg-form').style.display = 'none';
+  const box = document.getElementById('success-box');
+  box.style.display = 'block';
+  document.getElementById('success-elig').innerHTML = eligible
+    ? '🟢 <strong>AI Status: Eligible</strong> — You are cleared to donate. You\'ll be notified when your blood type is needed.'
+    : '🟡 <strong>AI Status: Pending Review</strong> — Your profile will be reviewed by a coordinator.';
+}
+</script>
+</body>
+</html>

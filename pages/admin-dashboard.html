@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Admin Panel — Blood Link</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+  :root{--crimson:#C0152A;--crimson-light:#E8304A;--blood-deep:#1A0508;--surface:#230A0E;--off-white:#FAF7F4;--text-muted:#7A6B65;--border:rgba(255,255,255,0.07);}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:var(--blood-deep);color:var(--off-white);min-height:100vh;display:flex;}
+  .sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:1.5rem 0;flex-shrink:0;}
+  .sb-logo{font-family:'DM Serif Display',serif;font-size:1.3rem;padding:0 1.5rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.5rem;}
+  .logo-drop{width:18px;height:18px;background:var(--crimson);clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);}
+  .sb-section{padding:.8rem 1.5rem .4rem;font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);}
+  .sb-item{display:flex;align-items:center;gap:.7rem;padding:.65rem 1.5rem;cursor:pointer;transition:all .2s;color:#C4B8B2;font-size:.9rem;text-decoration:none;}
+  .sb-item:hover,.sb-item.active{background:rgba(192,21,42,.12);color:var(--off-white);}
+  .sb-item.active{color:var(--crimson-light);border-right:3px solid var(--crimson);}
+  .sb-footer{margin-top:auto;padding:1.5rem;border-top:1px solid var(--border);}
+  .main{flex:1;overflow-y:auto;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:1.5rem 2rem;border-bottom:1px solid var(--border);background:rgba(26,5,8,.8);backdrop-filter:blur(8px);position:sticky;top:0;z-index:10;}
+  .topbar h1{font-family:'DM Serif Display',serif;font-size:1.4rem;}
+  .content{padding:2rem;}
+  .stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;margin-bottom:2rem;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.3rem;}
+  .sc-label{font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.4rem;}
+  .sc-val{font-family:'DM Serif Display',serif;font-size:1.7rem;}
+  .sc-trend{font-size:.75rem;margin-top:.2rem;}
+  .up{color:#4ADE80;} .down{color:var(--crimson-light);}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin-bottom:1.5rem;}
+  .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;}
+  .card-title-text{font-weight:600;font-size:1rem;}
+  .btn-sm{background:rgba(192,21,42,.15);color:var(--crimson-light);border:1px solid rgba(192,21,42,.3);padding:.35rem .8rem;border-radius:5px;font-size:.78rem;cursor:pointer;font-family:'DM Sans',sans-serif;}
+  .btn-primary{background:var(--crimson);color:white;border:none;padding:.55rem 1.1rem;border-radius:6px;font-size:.82rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
+  table{width:100%;border-collapse:collapse;}
+  th{font-size:.7rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);padding:.5rem .7rem;text-align:left;border-bottom:1px solid var(--border);}
+  td{padding:.7rem .7rem;font-size:.86rem;border-bottom:1px solid rgba(255,255,255,.04);}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:rgba(255,255,255,.02);}
+  .badge{display:inline-flex;align-items:center;gap:.3rem;padding:.22rem .6rem;border-radius:100px;font-size:.72rem;font-weight:600;}
+  .badge-green{background:rgba(26,122,74,.2);color:#4ADE80;}
+  .badge-red{background:rgba(192,21,42,.2);color:var(--crimson-light);}
+  .badge-yellow{background:rgba(184,96,10,.2);color:#FBBF24;}
+  .badge-blue{background:rgba(59,130,246,.2);color:#60A5FA;}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;}
+  /* CHART */
+  .chart-area{height:160px;display:flex;align-items:flex-end;gap:6px;padding-top:1rem;}
+  .bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:.3rem;}
+  .bar{width:100%;border-radius:3px 3px 0 0;transition:opacity .2s;cursor:pointer;}
+  .bar:hover{opacity:.75;}
+  .bar-label{font-size:.65rem;color:var(--text-muted);}
+  /* SYSTEM STATUS */
+  .status-item{display:flex;align-items:center;justify-content:space-between;padding:.75rem 0;border-bottom:1px solid var(--border);}
+  .status-item:last-child{border-bottom:none;}
+  .status-dot{width:8px;height:8px;border-radius:50%;margin-right:.5rem;display:inline-block;}
+  .dot-green{background:#4ADE80;} .dot-yellow{background:#FBBF24;} .dot-red{background:var(--crimson-light);}
+  .status-name{font-size:.88rem;display:flex;align-items:center;gap:.4rem;}
+  .status-ping{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--text-muted);}
+  /* TABS */
+  .tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:1.2rem;}
+  .tab{padding:.6rem 1.2rem;font-size:.85rem;cursor:pointer;color:#A09088;border-bottom:2px solid transparent;transition:all .2s;}
+  .tab.active{color:var(--crimson-light);border-bottom-color:var(--crimson);}
+  .tab-content{display:none;} .tab-content.active{display:block;}
+  @media(max-width:1100px){.stats-row{grid-template-columns:repeat(3,1fr);}.two-col{grid-template-columns:1fr;}}
+  @media(max-width:900px){.sidebar{display:none;}.stats-row{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="sb-logo"><div class="logo-drop"></div>BloodLink</div>
+  <div class="sb-section">Admin Menu</div>
+  <a class="sb-item active" href="#">📊 Overview</a>
+  <a class="sb-item" href="#">👥 Donors</a>
+  <a class="sb-item" href="#">🏥 Hospitals</a>
+  <a class="sb-item" href="#">📋 Blood Requests</a>
+  <a class="sb-item" href="#">🩸 Inventory</a>
+  <a class="sb-item" href="#">🧠 AI Model</a>
+  <a class="sb-item" href="#">📈 Reports</a>
+  <div class="sb-section">System</div>
+  <a class="sb-item" href="#">🔔 Notifications</a>
+  <a class="sb-item" href="#">📝 Audit Logs</a>
+  <a class="sb-item" href="#">⚙️ Settings</a>
+  <a class="sb-item" href="login.html">🚪 Sign Out</a>
+  <div class="sb-footer">
+    <div style="display:flex;align-items:center;gap:.8rem;">
+      <div style="width:36px;height:36px;background:#2A1A4A;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.85rem;">⚙️</div>
+      <div>
+        <div style="font-weight:600;font-size:.88rem;">Admin</div>
+        <div style="font-size:.74rem;color:var(--text-muted);">System Administrator</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <h1>System Overview</h1>
+    <div style="display:flex;gap:.8rem;align-items:center;">
+      <span style="font-size:.8rem;color:#4ADE80;">● All Systems Operational</span>
+      <button class="btn-primary" onclick="generateReport()">📈 Export Report</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="sc-label">Total Donors</div>
+        <div class="sc-val">1,284</div>
+        <div class="sc-trend up">↑ +23 this week</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">Registered Hospitals</div>
+        <div class="sc-val">47</div>
+        <div class="sc-trend up">↑ +2 this month</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">Active Requests</div>
+        <div class="sc-val" style="color:var(--crimson-light);">18</div>
+        <div class="sc-trend down">↑ 5 critical</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">AI Accuracy</div>
+        <div class="sc-val" style="color:#4ADE80;">94.7%</div>
+        <div class="sc-trend up">↑ +1.2% vs last month</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">Donations This Month</div>
+        <div class="sc-val">312</div>
+        <div class="sc-trend up">↑ +18% vs last</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <!-- DONATIONS CHART -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title-text">Monthly Donations</div>
+          <span style="font-size:.78rem;color:#A09088;">Last 12 months</span>
+        </div>
+        <div class="chart-area" id="chart"></div>
+        <div style="display:flex;gap:1.5rem;margin-top:1rem;font-size:.78rem;color:#A09088;">
+          <span>🔴 Donations</span><span>🟢 Requests Fulfilled</span>
+        </div>
+      </div>
+
+      <!-- SYSTEM STATUS -->
+      <div class="card">
+        <div class="card-header"><div class="card-title-text">System Health</div><button class="btn-sm">Refresh</button></div>
+        <div class="status-item">
+          <div class="status-name"><span class="status-dot dot-green"></span>Web Application</div>
+          <div class="status-ping">12ms</div>
+        </div>
+        <div class="status-item">
+          <div class="status-name"><span class="status-dot dot-green"></span>AI/ML API (Python)</div>
+          <div class="status-ping">45ms</div>
+        </div>
+        <div class="status-item">
+          <div class="status-name"><span class="status-dot dot-green"></span>MySQL Database</div>
+          <div class="status-ping">8ms</div>
+        </div>
+        <div class="status-item">
+          <div class="status-name"><span class="status-dot dot-green"></span>Email Service (SMTP)</div>
+          <div class="status-ping">230ms</div>
+        </div>
+        <div class="status-item">
+          <div class="status-name"><span class="status-dot dot-yellow"></span>SMS Service (Twilio)</div>
+          <div class="status-ping">380ms ⚠</div>
+        </div>
+        <div class="status-item">
+          <div class="status-name"><span class="status-dot dot-green"></span>JWT Auth Service</div>
+          <div class="status-ping">5ms</div>
+        </div>
+        <div style="margin-top:1rem;padding:.7rem;background:rgba(184,96,10,.1);border:1px solid rgba(184,96,10,.25);border-radius:6px;font-size:.78rem;color:#FBBF24;">
+          ⚠ Twilio SMS latency elevated. Monitoring. Email notifications unaffected.
+        </div>
+      </div>
+    </div>
+
+    <!-- USER MANAGEMENT -->
+    <div class="card">
+      <div class="card-header"><div class="card-title-text">User Management</div></div>
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('donors-tab',this)">Donors</div>
+        <div class="tab" onclick="switchTab('hospitals-tab',this)">Hospitals</div>
+        <div class="tab" onclick="switchTab('requests-tab',this)">Recent Requests</div>
+      </div>
+
+      <div id="donors-tab" class="tab-content active">
+        <table>
+          <thead><tr><th>Name</th><th>Blood Type</th><th>Location</th><th>Donations</th><th>AI Status</th><th>Registered</th><th>Actions</th></tr></thead>
+          <tbody>
+            <tr><td>Saramsh Puri</td><td>A+</td><td>Kuala Lumpur</td><td>7</td><td><span class="badge badge-green">✓ Eligible</span></td><td>Jan 2024</td><td><button class="btn-sm">View</button></td></tr>
+            <tr><td>Aisha Rahman</td><td>O-</td><td>Petaling Jaya</td><td>12</td><td><span class="badge badge-green">✓ Eligible</span></td><td>Mar 2023</td><td><button class="btn-sm">View</button></td></tr>
+            <tr><td>Kumar Raj</td><td>B+</td><td>Shah Alam</td><td>4</td><td><span class="badge badge-yellow">⚠ Cooldown</span></td><td>Jun 2024</td><td><button class="btn-sm">View</button></td></tr>
+            <tr><td>Rachel Lim</td><td>O-</td><td>Subang Jaya</td><td>9</td><td><span class="badge badge-green">✓ Eligible</span></td><td>Aug 2023</td><td><button class="btn-sm">View</button></td></tr>
+            <tr><td>Mohammed Hassan</td><td>A+</td><td>Cyberjaya</td><td>2</td><td><span class="badge badge-red">✗ Ineligible</span></td><td>Nov 2024</td><td><button class="btn-sm">View</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div id="hospitals-tab" class="tab-content">
+        <table>
+          <thead><tr><th>Hospital</th><th>City</th><th>Active Requests</th><th>Total Fulfilled</th><th>Status</th><th>Joined</th></tr></thead>
+          <tbody>
+            <tr><td>Pantai Hospital KL</td><td>Kuala Lumpur</td><td>5</td><td>84</td><td><span class="badge badge-green">✓ Active</span></td><td>Jan 2024</td></tr>
+            <tr><td>Gleneagles KL</td><td>Kuala Lumpur</td><td>2</td><td>61</td><td><span class="badge badge-green">✓ Active</span></td><td>Feb 2024</td></tr>
+            <tr><td>KLCC Medical Centre</td><td>Kuala Lumpur</td><td>1</td><td>33</td><td><span class="badge badge-green">✓ Active</span></td><td>Apr 2024</td></tr>
+            <tr><td>Ara Damansara Hospital</td><td>Petaling Jaya</td><td>0</td><td>19</td><td><span class="badge badge-blue">● Idle</span></td><td>Jul 2024</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div id="requests-tab" class="tab-content">
+        <table>
+          <thead><tr><th>Hospital</th><th>Type</th><th>Units</th><th>Urgency</th><th>Matches</th><th>Status</th><th>Date</th></tr></thead>
+          <tbody>
+            <tr><td>Pantai Hospital</td><td>A+</td><td>3</td><td><span class="badge badge-red">Critical</span></td><td>7</td><td><span class="badge badge-blue">In Progress</span></td><td>12 Mar 2025</td></tr>
+            <tr><td>Gleneagles</td><td>O-</td><td>2</td><td><span class="badge badge-red">Critical</span></td><td>3</td><td><span class="badge badge-blue">In Progress</span></td><td>12 Mar 2025</td></tr>
+            <tr><td>KLCC Medical</td><td>B+</td><td>1</td><td><span class="badge badge-yellow">Urgent</span></td><td>5</td><td><span class="badge badge-green">Fulfilled</span></td><td>10 Mar 2025</td></tr>
+            <tr><td>Pantai Hospital</td><td>AB-</td><td>1</td><td><span class="badge badge-yellow">Moderate</span></td><td>1</td><td><span class="badge badge-yellow">Notified</span></td><td>08 Mar 2025</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- AI MODEL STATS -->
+    <div class="card">
+      <div class="card-header"><div class="card-title-text">AI Model Performance</div><button class="btn-sm">Retrain Model</button></div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;">
+        <div style="background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:8px;padding:1rem;text-align:center;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:1.8rem;font-weight:600;color:#4ADE80;">94.7%</div>
+          <div style="font-size:.75rem;color:var(--text-muted);margin-top:.3rem;">Eligibility Accuracy</div>
+        </div>
+        <div style="background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:8px;padding:1rem;text-align:center;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:1.8rem;font-weight:600;color:#60A5FA;">91.2%</div>
+          <div style="font-size:.75rem;color:var(--text-muted);margin-top:.3rem;">Match Precision</div>
+        </div>
+        <div style="background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:8px;padding:1rem;text-align:center;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:1.8rem;font-weight:600;color:#FBBF24;">3.4%</div>
+          <div style="font-size:.75rem;color:var(--text-muted);margin-top:.3rem;">False Positive Rate</div>
+        </div>
+        <div style="background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:8px;padding:1rem;text-align:center;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:1.8rem;font-weight:600;color:#4ADE80;">1,847</div>
+          <div style="font-size:.75rem;color:var(--text-muted);margin-top:.3rem;">Training Samples</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Build bar chart
+const months = ['Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'];
+const donations = [210,185,240,265,220,280,305,290,315,285,298,312];
+const fulfilled = [195,172,228,250,205,260,291,275,300,271,280,295];
+const max = Math.max(...donations);
+const chart = document.getElementById('chart');
+months.forEach((m,i) => {
+  const wrap = document.createElement('div');
+  wrap.className = 'bar-wrap';
+  wrap.innerHTML = `
+    <div class="bar" style="height:${Math.round(donations[i]/max*140)}px;background:linear-gradient(180deg,#E8304A,#8B0E1D);" title="Donations: ${donations[i]}"></div>
+    <div class="bar-label">${m}</div>
+  `;
+  chart.appendChild(wrap);
+});
+
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+function generateReport() {
+  alert('📈 Report generated!\n\nExporting system summary for March 2025:\n• 312 donations recorded\n• 47 hospitals registered\n• 94.7% AI accuracy\n• 18 active requests\n\n(In production this would download a PDF report)');
+}
+</script>
+</body>
+</html>

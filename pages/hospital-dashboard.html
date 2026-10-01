@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Hospital Dashboard — Blood Link</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+  :root{--crimson:#C0152A;--crimson-light:#E8304A;--blood-deep:#1A0508;--surface:#230A0E;--surface2:#2D0F14;--off-white:#FAF7F4;--text-muted:#7A6B65;--success:#1A7A4A;--warn:#B8600A;--border:rgba(255,255,255,0.07);}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:var(--blood-deep);color:var(--off-white);min-height:100vh;display:flex;}
+  .sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:1.5rem 0;flex-shrink:0;}
+  .sb-logo{font-family:'DM Serif Display',serif;font-size:1.3rem;padding:0 1.5rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.5rem;}
+  .logo-drop{width:18px;height:18px;background:var(--crimson);clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);}
+  .sb-section{padding:.8rem 1.5rem .4rem;font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);}
+  .sb-item{display:flex;align-items:center;gap:.7rem;padding:.65rem 1.5rem;cursor:pointer;transition:all .2s;color:#C4B8B2;font-size:.9rem;text-decoration:none;}
+  .sb-item:hover,.sb-item.active{background:rgba(192,21,42,.12);color:var(--off-white);}
+  .sb-item.active{color:var(--crimson-light);border-right:3px solid var(--crimson);}
+  .sb-footer{margin-top:auto;padding:1.5rem;border-top:1px solid var(--border);}
+  .main{flex:1;overflow-y:auto;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:1.5rem 2rem;border-bottom:1px solid var(--border);background:rgba(26,5,8,.8);backdrop-filter:blur(8px);position:sticky;top:0;z-index:10;}
+  .topbar h1{font-family:'DM Serif Display',serif;font-size:1.4rem;}
+  .content{padding:2rem;}
+  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.4rem;}
+  .sc-label{font-size:.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.4rem;}
+  .sc-val{font-family:'DM Serif Display',serif;font-size:1.8rem;}
+  .sc-sub{font-size:.78rem;color:var(--text-muted);margin-top:.2rem;}
+  .sc-alert{color:var(--crimson-light);}
+  /* INVENTORY */
+  .inventory-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:.8rem;margin-bottom:2rem;}
+  .inv-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem .8rem;text-align:center;transition:border-color .2s;}
+  .inv-card:hover{border-color:rgba(192,21,42,.35);}
+  .inv-type{font-family:'DM Serif Display',serif;font-size:1.3rem;margin-bottom:.3rem;}
+  .inv-units{font-family:'JetBrains Mono',monospace;font-size:1.5rem;font-weight:600;}
+  .inv-label{font-size:.65rem;color:var(--text-muted);text-transform:uppercase;margin-top:.2rem;}
+  .inv-bar{height:4px;border-radius:2px;margin-top:.6rem;background:rgba(255,255,255,.08);}
+  .inv-fill{height:100%;border-radius:2px;transition:width .6s;}
+  .low{color:#FBBF24;} .critical{color:var(--crimson-light);} .ok{color:#4ADE80;}
+  /* MAIN GRID */
+  .main-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin-bottom:1.5rem;}
+  .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;}
+  .card-title-text{font-weight:600;font-size:1rem;}
+  .btn-primary{background:var(--crimson);color:white;border:none;padding:.65rem 1.3rem;border-radius:6px;font-size:.85rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s;display:inline-flex;align-items:center;gap:.4rem;}
+  .btn-primary:hover{background:var(--crimson-light);}
+  .btn-sm{background:rgba(192,21,42,.15);color:var(--crimson-light);border:1px solid rgba(192,21,42,.3);padding:.35rem .8rem;border-radius:5px;font-size:.78rem;cursor:pointer;font-family:'DM Sans',sans-serif;}
+  table{width:100%;border-collapse:collapse;}
+  th{font-size:.7rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);padding:.5rem .7rem;text-align:left;border-bottom:1px solid var(--border);}
+  td{padding:.7rem .7rem;font-size:.86rem;border-bottom:1px solid rgba(255,255,255,.04);}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:rgba(255,255,255,.02);}
+  .badge{display:inline-flex;align-items:center;gap:.3rem;padding:.22rem .6rem;border-radius:100px;font-size:.72rem;font-weight:600;}
+  .badge-green{background:rgba(26,122,74,.2);color:#4ADE80;}
+  .badge-red{background:rgba(192,21,42,.2);color:var(--crimson-light);}
+  .badge-yellow{background:rgba(184,96,10,.2);color:#FBBF24;}
+  .badge-blue{background:rgba(59,130,246,.2);color:#60A5FA;}
+  /* REQUEST FORM */
+  .req-form{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+  .form-group{margin-bottom:0;}
+  label{display:block;font-size:.75rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#A09088;margin-bottom:.4rem;}
+  input,select{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:.65rem .9rem;color:var(--off-white);font-size:.9rem;font-family:'DM Sans',sans-serif;transition:border-color .2s;}
+  input:focus,select:focus{outline:none;border-color:var(--crimson);}
+  select option{background:#230A0E;}
+  /* MATCH RESULTS */
+  .match-result{display:flex;align-items:center;gap:1rem;padding:.85rem;background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:8px;margin-bottom:.6rem;transition:border-color .2s;}
+  .match-result:hover{border-color:rgba(192,21,42,.3);}
+  .match-rank{font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--text-muted);width:24px;text-align:center;flex-shrink:0;}
+  .match-avatar{width:36px;height:36px;background:var(--crimson);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.78rem;flex-shrink:0;}
+  .match-info{flex:1;}
+  .match-name{font-weight:600;font-size:.9rem;}
+  .match-meta{font-size:.78rem;color:#A09088;margin-top:.2rem;}
+  .match-score{text-align:right;flex-shrink:0;}
+  .score-val{font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:600;color:#4ADE80;}
+  .score-label{font-size:.68rem;color:var(--text-muted);}
+  .score-bar{width:60px;height:4px;background:rgba(255,255,255,.1);border-radius:2px;margin-top:.4rem;overflow:hidden;}
+  .score-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,#1A7A4A,#4ADE80);}
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:100;align-items:center;justify-content:center;}
+  .modal-bg.open{display:flex;}
+  .modal{background:var(--surface);border:1px solid rgba(192,21,42,.3);border-radius:12px;padding:2rem;width:100%;max-width:520px;position:relative;max-height:90vh;overflow-y:auto;}
+  .modal h3{font-family:'DM Serif Display',serif;font-size:1.5rem;margin-bottom:.3rem;}
+  .modal-sub{color:#A09088;font-size:.85rem;margin-bottom:1.5rem;}
+  .close-btn{position:absolute;top:1rem;right:1rem;background:none;border:none;color:#A09088;font-size:1.2rem;cursor:pointer;}
+  @media(max-width:1100px){.inventory-grid{grid-template-columns:repeat(4,1fr);}.main-grid{grid-template-columns:1fr;}}
+  @media(max-width:900px){.sidebar{display:none;}.stats-row{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="sb-logo"><div class="logo-drop"></div>BloodLink</div>
+  <div class="sb-section">Hospital Menu</div>
+  <a class="sb-item active" href="#">📊 Dashboard</a>
+  <a class="sb-item" href="#" onclick="openRequestModal()">➕ New Blood Request</a>
+  <a class="sb-item" href="#">📋 My Requests</a>
+  <a class="sb-item" href="#">🩸 Blood Inventory</a>
+  <a class="sb-item" href="#">👥 Matched Donors</a>
+  <div class="sb-section">Account</div>
+  <a class="sb-item" href="#">🏥 Hospital Profile</a>
+  <a class="sb-item" href="login.html">🚪 Sign Out</a>
+  <div class="sb-footer">
+    <div style="display:flex;align-items:center;gap:.8rem;">
+      <div style="width:36px;height:36px;background:#1A3A6A;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.9rem;">🏥</div>
+      <div>
+        <div style="font-weight:600;font-size:.88rem;">Pantai Hospital</div>
+        <div style="font-size:.74rem;color:var(--text-muted);">Hospital Staff</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <h1>Hospital Dashboard</h1>
+    <div style="display:flex;gap:.8rem;">
+      <span class="badge badge-red" style="font-size:.8rem;padding:.4rem .8rem;">🚨 2 Urgent Requests Active</span>
+      <button class="btn-primary" onclick="openRequestModal()">➕ New Request</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card"><div class="sc-label">Active Requests</div><div class="sc-val sc-alert">5</div><div class="sc-sub">2 critical</div></div>
+      <div class="stat-card"><div class="sc-label">Donors Matched</div><div class="sc-val">23</div><div class="sc-sub">This month</div></div>
+      <div class="stat-card"><div class="sc-label">Requests Fulfilled</div><div class="sc-val">18</div><div class="sc-sub">↑ 12% vs last month</div></div>
+      <div class="stat-card"><div class="sc-label">Avg Response Time</div><div class="sc-val">1.4h</div><div class="sc-sub">Donor contact to response</div></div>
+    </div>
+
+    <!-- BLOOD INVENTORY -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title-text">Blood Inventory — Real-Time</div>
+        <span style="font-size:.8rem;color:#A09088;">Last updated: 2 min ago</span>
+      </div>
+      <div class="inventory-grid">
+        <div class="inv-card">
+          <div class="inv-type">A+</div>
+          <div class="inv-units ok">12</div>
+          <div class="inv-label">Units</div>
+          <div class="inv-bar"><div class="inv-fill" style="width:80%;background:#4ADE80;"></div></div>
+        </div>
+        <div class="inv-card">
+          <div class="inv-type">A-</div>
+          <div class="inv-units warn">3</div>
+          <div class="inv-label">Units</div>
+          <div class="inv-bar"><div class="inv-fill" style="width:20%;background:#FBBF24;"></div></div>
+        </div>
+        <div class="inv-card">
+          <div class="inv-type">B+</div>
+          <div class="inv-units ok">8</div>
+          <div class="inv-label">Units</div>
+          <div class="inv-bar"><div class="inv-fill" style="width:53%;background:#4ADE80;"></div></div>
+        </div>
+        <div class="inv-card">
+          <div class="inv-type">B-</div>
+          <div class="inv-units critical">1</div>
+          <div class="inv-label">Units</div>
+          <div class="inv-bar"><div class="inv-fill" style="width:7%;background:#E8304A;"></div></div>
+        </div>
+        <div class="inv-card">
+          <div class="inv-type">AB+</div>
+          <div class="inv-units ok">6</div>
+          <div class="inv-label">Units</div>
+          <div class="inv-bar"><div class="inv-fill" style="width:40%;background:#4ADE80;"></div></div>
+        </div>
+        <div class="inv-card">
+          <div class="inv-type">AB-</div>
+          <div class="inv-units warn">2</div>
+          <div class="inv-label">Units</div>
+          <div class="inv-bar"><div class="inv-fill" style="width:13%;background:#FBBF24;"></div></div>
+        </div>
+        <div class="inv-card">
+          <div class="inv-type">O+</div>
+          <div class="inv-units ok">15</div>
+          <div class="inv-label">Units</div>
+          <div class="inv-bar"><div class="inv-fill" style="width:100%;background:#4ADE80;"></div></div>
+        </div>
+        <div class="inv-card">
+          <div class="inv-type">O-</div>
+          <div class="inv-units critical">1</div>
+          <div class="inv-label">Units</div>
+          <div class="inv-bar"><div class="inv-fill" style="width:7%;background:#E8304A;"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="main-grid">
+      <!-- ACTIVE REQUESTS -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title-text">Active Blood Requests</div>
+          <button class="btn-sm" onclick="openRequestModal()">+ New</button>
+        </div>
+        <table>
+          <thead><tr><th>Type</th><th>Units</th><th>Urgency</th><th>Matched</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>A+</strong></td><td>3</td>
+              <td><span class="badge badge-red">🚨 Critical</span></td>
+              <td><span style="color:#4ADE80;font-weight:600;">7 donors</span></td>
+              <td><button class="btn-sm" onclick="showMatches('A+')">View Matches</button></td>
+            </tr>
+            <tr>
+              <td><strong>O-</strong></td><td>2</td>
+              <td><span class="badge badge-red">🚨 Critical</span></td>
+              <td><span style="color:#4ADE80;font-weight:600;">3 donors</span></td>
+              <td><button class="btn-sm" onclick="showMatches('O-')">View Matches</button></td>
+            </tr>
+            <tr>
+              <td><strong>B+</strong></td><td>1</td>
+              <td><span class="badge badge-yellow">⚠ Urgent</span></td>
+              <td><span style="color:#4ADE80;font-weight:600;">5 donors</span></td>
+              <td><button class="btn-sm" onclick="showMatches('B+')">View Matches</button></td>
+            </tr>
+            <tr>
+              <td><strong>AB-</strong></td><td>1</td>
+              <td><span class="badge badge-yellow">⚠ Moderate</span></td>
+              <td><span style="color:#FBBF24;font-weight:600;">1 donor</span></td>
+              <td><button class="btn-sm" onclick="showMatches('AB-')">View Matches</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- MATCHED DONORS PANEL -->
+      <div class="card" id="match-panel">
+        <div class="card-header">
+          <div class="card-title-text">AI-Matched Donors <span id="match-type" style="color:var(--crimson-light);font-family:'JetBrains Mono',monospace;font-size:.85rem;"></span></div>
+          <span style="font-size:.78rem;color:#A09088;">Ranked by score</span>
+        </div>
+        <div id="match-list">
+          <div style="color:#A09088;font-size:.9rem;text-align:center;padding:2rem 0;">Select a request to view AI-matched donors</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECENT ACTIVITY -->
+    <div class="card">
+      <div class="card-header"><div class="card-title-text">Recent Activity</div></div>
+      <table>
+        <thead><tr><th>Date</th><th>Action</th><th>Blood Type</th><th>Donor</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td>12 Mar 2025</td><td>Request Fulfilled</td><td>A+</td><td>Saramsh Puri</td><td><span class="badge badge-green">✓ Success</span></td></tr>
+          <tr><td>10 Mar 2025</td><td>Donor Notified</td><td>O-</td><td>Aisha Rahman</td><td><span class="badge badge-yellow">⏳ Pending</span></td></tr>
+          <tr><td>08 Mar 2025</td><td>Request Fulfilled</td><td>B+</td><td>Kumar Raj</td><td><span class="badge badge-green">✓ Success</span></td></tr>
+          <tr><td>05 Mar 2025</td><td>Donor No-Show</td><td>AB+</td><td>—</td><td><span class="badge badge-red">✗ Failed</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- NEW REQUEST MODAL -->
+<div class="modal-bg" id="req-modal">
+  <div class="modal">
+    <button class="close-btn" onclick="closeReqModal()">✕</button>
+    <h3>New Blood Request</h3>
+    <div class="modal-sub">Submit a request — the AI matcher will find eligible donors immediately.</div>
+    <div class="req-form">
+      <div class="form-group"><label>Blood Type Required</label>
+        <select id="r_type"><option value="">Select...</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select></div>
+      <div class="form-group"><label>Units Needed</label><input type="number" id="r_units" placeholder="2" min="1"/></div>
+      <div class="form-group"><label>Urgency Level</label>
+        <select id="r_urgency"><option>Critical (within 6 hrs)</option><option>Urgent (within 24 hrs)</option><option>Moderate (within 48 hrs)</option><option>Scheduled</option></select></div>
+      <div class="form-group"><label>Department</label><input id="r_dept" placeholder="ICU / Surgery / General"/></div>
+    </div>
+    <div class="form-group" style="margin-top:1rem;">
+      <label>Additional Notes</label>
+      <input id="r_notes" placeholder="e.g. Patient has rare phenotype, cross-match required"/>
+    </div>
+    <button class="btn-primary" style="width:100%;margin-top:1.2rem;justify-content:center;" onclick="submitRequest()">Submit Request & Run AI Match →</button>
+  </div>
+</div>
+
+<script>
+function openRequestModal(){ document.getElementById('req-modal').classList.add('open'); }
+function closeReqModal(){ document.getElementById('req-modal').classList.remove('open'); }
+
+const donors = {
+  'A+': [
+    {init:'SP',name:'Saramsh Puri',meta:'A+ · 2.3 km · Last donated 38 days ago',score:96},
+    {init:'AR',name:'Aisha Rahman',meta:'A+ · 3.1 km · Last donated 65 days ago',score:91},
+    {init:'KJ',name:'Kavya Jain',meta:'A+ · 4.8 km · Last donated 90 days ago',score:87},
+    {init:'MH',name:'Mohammed Hassan',meta:'A+ · 6.2 km · Last donated 120 days ago',score:82},
+  ],
+  'O-': [
+    {init:'RL',name:'Rachel Lim',meta:'O- · 1.8 km · Last donated 70 days ago',score:94},
+    {init:'DK',name:'David Kumar',meta:'O- · 5.4 km · Last donated 85 days ago',score:85},
+    {init:'FN',name:'Fatima Noor',meta:'O- · 9.1 km · Last donated 100 days ago',score:74},
+  ],
+  'B+': [
+    {init:'RR',name:'Rohan Rao',meta:'B+ · 3.3 km · Last donated 62 days ago',score:93},
+    {init:'PN',name:'Priya Nair',meta:'B+ · 4.1 km · Last donated 78 days ago',score:89},
+    {init:'AK',name:'Arjun Kapoor',meta:'B+ · 5.7 km · Last donated 95 days ago',score:83},
+  ],
+  'AB-': [
+    {init:'YT',name:'Yusuf Tan',meta:'AB- · 7.2 km · Last donated 110 days ago',score:71},
+  ]
+};
+
+function showMatches(type) {
+  const list = donors[type] || [];
+  document.getElementById('match-type').textContent = `— ${type}`;
+  const html = list.map((d,i) => `
+    <div class="match-result">
+      <div class="match-rank">#${i+1}</div>
+      <div class="match-avatar">${d.init}</div>
+      <div class="match-info">
+        <div class="match-name">${d.name}</div>
+        <div class="match-meta">${d.meta}</div>
+      </div>
+      <div class="match-score">
+        <div class="score-val">${d.score}%</div>
+        <div class="score-label">AI Score</div>
+        <div class="score-bar"><div class="score-fill" style="width:${d.score}%;"></div></div>
+      </div>
+      <button class="btn-sm" onclick="notifyDonor('${d.name}')">Notify</button>
+    </div>
+  `).join('');
+  document.getElementById('match-list').innerHTML = html;
+}
+
+function notifyDonor(name) {
+  alert(`✅ Notification sent to ${name} via Email & SMS.`);
+}
+
+function submitRequest() {
+  const type = document.getElementById('r_type').value;
+  if (!type) { alert('Please select a blood type.'); return; }
+  closeReqModal();
+  setTimeout(() => {
+    alert(`✅ Blood request submitted!\n\nAI matching complete — ${(donors[type]||[]).length} eligible donors found for ${type}. Notifications sent automatically.`);
+    showMatches(type);
+  }, 400);
+}
+
+document.getElementById('req-modal').addEventListener('click', function(e){ if(e.target===this) closeReqModal(); });
+</script>
+</body>
+</html>

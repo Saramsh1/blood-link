@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Blood Link — AI Donor Matching System</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --crimson: #C0152A;
+    --crimson-dark: #8B0E1D;
+    --crimson-light: #E8304A;
+    --blood-deep: #1A0508;
+    --off-white: #FAF7F4;
+    --warm-gray: #E8E2DC;
+    --text-muted: #7A6B65;
+    --success: #1A7A4A;
+    --warning: #B8600A;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--blood-deep);
+    color: var(--off-white);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: 
+      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(192,21,42,0.18) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 80% at 80% 90%, rgba(139,14,29,0.22) 0%, transparent 60%),
+      url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23C0152A' fill-opacity='0.03'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.2rem 3rem;
+    background: rgba(26,5,8,0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(192,21,42,0.2);
+  }
+  .nav-logo {
+    display: flex; align-items: center; gap: 0.6rem;
+    font-family: 'DM Serif Display', serif; font-size: 1.4rem;
+    color: var(--off-white); text-decoration: none;
+  }
+  .logo-drop {
+    width: 28px; height: 28px;
+    background: var(--crimson);
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+    animation: pulse-drop 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse-drop {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.12); }
+  }
+  .nav-links { display: flex; gap: 2rem; align-items: center; }
+  .nav-links a {
+    color: var(--warm-gray); text-decoration: none; font-size: 0.9rem;
+    font-weight: 500; letter-spacing: 0.03em;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--crimson-light); }
+  .btn-nav {
+    background: var(--crimson); color: white; border: none;
+    padding: 0.55rem 1.4rem; border-radius: 4px; font-size: 0.88rem;
+    font-weight: 600; cursor: pointer; text-decoration: none;
+    transition: background 0.2s, transform 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .btn-nav:hover { background: var(--crimson-light); transform: translateY(-1px); }
+
+  /* HERO */
+  .hero {
+    position: relative; z-index: 1;
+    min-height: 100vh;
+    display: grid; grid-template-columns: 1fr 1fr;
+    align-items: center;
+    padding: 8rem 5rem 4rem;
+    gap: 4rem;
+  }
+  .hero-text { max-width: 560px; }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    background: rgba(192,21,42,0.15); border: 1px solid rgba(192,21,42,0.35);
+    padding: 0.4rem 1rem; border-radius: 100px;
+    font-size: 0.78rem; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: #E8304A;
+    margin-bottom: 1.8rem;
+    animation: fade-up 0.6s ease both;
+  }
+  .badge-dot { width: 6px; height: 6px; background: var(--crimson-light); border-radius: 50%; animation: blink 1.4s infinite; }
+  @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2.8rem, 5vw, 4.2rem);
+    line-height: 1.08;
+    margin-bottom: 1.4rem;
+    animation: fade-up 0.6s 0.1s ease both;
+  }
+  h1 em { color: var(--crimson-light); font-style: italic; }
+  .hero-sub {
+    font-size: 1.05rem; line-height: 1.7; color: #C4B8B2;
+    margin-bottom: 2.4rem;
+    animation: fade-up 0.6s 0.2s ease both;
+  }
+  .hero-actions {
+    display: flex; gap: 1rem; flex-wrap: wrap;
+    animation: fade-up 0.6s 0.3s ease both;
+  }
+  .btn-primary {
+    background: var(--crimson); color: white;
+    padding: 0.85rem 2rem; border-radius: 6px;
+    font-size: 0.95rem; font-weight: 600;
+    text-decoration: none; border: none; cursor: pointer;
+    transition: all 0.2s; font-family: 'DM Sans', sans-serif;
+    display: inline-flex; align-items: center; gap: 0.5rem;
+  }
+  .btn-primary:hover { background: var(--crimson-light); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(192,21,42,0.35); }
+  .btn-outline {
+    background: transparent; color: var(--off-white);
+    padding: 0.85rem 2rem; border-radius: 6px;
+    font-size: 0.95rem; font-weight: 500;
+    text-decoration: none; border: 1px solid rgba(255,255,255,0.2); cursor: pointer;
+    transition: all 0.2s; font-family: 'DM Sans', sans-serif;
+  }
+  .btn-outline:hover { border-color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.06); }
+
+  .hero-stats {
+    display: flex; gap: 2.5rem; margin-top: 3.5rem; padding-top: 2rem;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    animation: fade-up 0.6s 0.4s ease both;
+  }
+  .stat-item {}
+  .stat-num {
+    font-family: 'DM Serif Display', serif; font-size: 2rem;
+    color: var(--crimson-light);
+  }
+  .stat-label { font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 0.2rem; }
+
+  /* HERO VISUAL — blood drop animation */
+  .hero-visual {
+    position: relative; display: flex; align-items: center; justify-content: center;
+    animation: fade-in 1s 0.3s ease both;
+  }
+  .drop-container {
+    position: relative; width: 380px; height: 460px;
+  }
+  .drop-main {
+    width: 220px; height: 280px;
+    background: radial-gradient(ellipse at 40% 30%, #E8304A, var(--crimson-dark));
+    clip-path: path('M110 0 C110 0 220 120 220 200 C220 263 171 280 110 280 C49 280 0 263 0 200 C0 120 110 0 110 0Z');
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    box-shadow: 0 0 60px rgba(192,21,42,0.5), 0 0 120px rgba(192,21,42,0.2);
+    animation: float 3s ease-in-out infinite;
+  }
+  @keyframes float { 0%,100%{transform:translate(-50%,-50%) translateY(0);} 50%{transform:translate(-50%,-50%) translateY(-12px);} }
+  .drop-glow {
+    position: absolute; inset: -40px;
+    background: radial-gradient(ellipse at center, rgba(192,21,42,0.15) 0%, transparent 70%);
+    animation: glow-pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes glow-pulse { 0%,100%{opacity:0.6;} 50%{opacity:1;} }
+  .drop-rings {
+    position: absolute; inset: 0;
+  }
+  .ring {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    border: 1px solid rgba(192,21,42,0.2);
+    border-radius: 50%;
+    animation: ring-expand 3s ease-out infinite;
+  }
+  .ring:nth-child(1){ width: 260px; height: 260px; animation-delay: 0s; }
+  .ring:nth-child(2){ width: 340px; height: 340px; animation-delay: 0.8s; }
+  .ring:nth-child(3){ width: 420px; height: 420px; animation-delay: 1.6s; }
+  @keyframes ring-expand { 0%{opacity:0.8;transform:translate(-50%,-50%) scale(0.8);} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.2);} }
+
+  /* info pills floating around drop */
+  .info-pill {
+    position: absolute;
+    background: rgba(26,5,8,0.9);
+    border: 1px solid rgba(192,21,42,0.3);
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    font-size: 0.78rem;
+    backdrop-filter: blur(8px);
+    animation: float-pill 3.5s ease-in-out infinite;
+  }
+  .pill-label { color: var(--text-muted); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; }
+  .pill-val { font-weight: 600; color: var(--off-white); font-family: 'JetBrains Mono', monospace; }
+  .pill-1 { top: 8%; left: -10%; animation-delay: 0s; }
+  .pill-2 { top: 20%; right: -8%; animation-delay: 0.7s; }
+  .pill-3 { bottom: 22%; left: -12%; animation-delay: 1.4s; }
+  .pill-4 { bottom: 10%; right: -5%; animation-delay: 2.1s; }
+  @keyframes float-pill { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-6px);} }
+
+  @keyframes fade-up { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:translateY(0);} }
+  @keyframes fade-in { from{opacity:0;} to{opacity:1;} }
+
+  /* FEATURES SECTION */
+  .section { position: relative; z-index: 1; padding: 6rem 5rem; }
+  .section-label {
+    font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--crimson-light);
+    margin-bottom: 0.8rem;
+  }
+  .section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2rem, 3.5vw, 3rem);
+    margin-bottom: 1rem; line-height: 1.15;
+  }
+  .section-sub { color: #C4B8B2; font-size: 1rem; line-height: 1.7; max-width: 520px; }
+
+  .features-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 1.5px; margin-top: 4rem;
+    border: 1.5px solid rgba(192,21,42,0.15);
+  }
+  .feature-card {
+    background: rgba(26,5,8,0.6);
+    padding: 2.2rem;
+    border: 1px solid rgba(192,21,42,0.1);
+    transition: all 0.3s;
+    position: relative; overflow: hidden;
+  }
+  .feature-card::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(192,21,42,0.05) 0%, transparent 60%);
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .feature-card:hover::before { opacity: 1; }
+  .feature-card:hover { border-color: rgba(192,21,42,0.3); transform: translateY(-2px); }
+  .feature-icon {
+    width: 44px; height: 44px;
+    background: rgba(192,21,42,0.15);
+    border: 1px solid rgba(192,21,42,0.3);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; margin-bottom: 1.2rem;
+  }
+  .feature-title { font-weight: 600; font-size: 1rem; margin-bottom: 0.6rem; }
+  .feature-desc { color: #A09088; font-size: 0.88rem; line-height: 1.65; }
+
+  /* HOW IT WORKS */
+  .steps { display: grid; grid-template-columns: repeat(4,1fr); gap: 2rem; margin-top: 4rem; }
+  .step {
+    position: relative; padding: 1.8rem;
+    background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 12px;
+    transition: border-color 0.3s;
+  }
+  .step:hover { border-color: rgba(192,21,42,0.3); }
+  .step-num {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
+    color: var(--crimson); font-weight: 600; letter-spacing: 0.1em;
+    margin-bottom: 1rem;
+  }
+  .step-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 0.5rem; }
+  .step-desc { font-size: 0.84rem; color: #A09088; line-height: 1.6; }
+  .step-connector {
+    position: absolute; top: 2.5rem; right: -1rem;
+    width: 2rem; height: 1px; background: rgba(192,21,42,0.3);
+    z-index: 2;
+  }
+  .step:last-child .step-connector { display: none; }
+
+  /* PORTAL CARDS */
+  .portals { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; margin-top: 4rem; }
+  .portal-card {
+    border: 1px solid rgba(255,255,255,0.08); border-radius: 12px;
+    padding: 2.5rem; background: rgba(255,255,255,0.025);
+    transition: all 0.3s; text-align: center;
+  }
+  .portal-card:hover { border-color: var(--crimson); background: rgba(192,21,42,0.06); transform: translateY(-4px); }
+  .portal-emoji { font-size: 2.5rem; margin-bottom: 1.2rem; display: block; }
+  .portal-title { font-family: 'DM Serif Display', serif; font-size: 1.4rem; margin-bottom: 0.8rem; }
+  .portal-desc { font-size: 0.88rem; color: #A09088; line-height: 1.6; margin-bottom: 1.8rem; }
+  .portal-link {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    color: var(--crimson-light); font-size: 0.88rem; font-weight: 600;
+    text-decoration: none; transition: gap 0.2s;
+  }
+  .portal-link:hover { gap: 0.7rem; }
+
+  /* CTA STRIP */
+  .cta-strip {
+    position: relative; z-index: 1;
+    margin: 2rem 5rem 6rem;
+    background: var(--crimson);
+    border-radius: 16px;
+    padding: 4rem;
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .cta-strip::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='50' cy='50' r='40' fill='none' stroke='white' stroke-width='0.5' stroke-opacity='0.1'/%3E%3C/svg%3E") repeat;
+  }
+  .cta-text h2 { font-family: 'DM Serif Display', serif; font-size: 2.2rem; margin-bottom: 0.5rem; }
+  .cta-text p { font-size: 1rem; opacity: 0.85; }
+  .btn-white {
+    background: white; color: var(--crimson);
+    padding: 0.9rem 2.2rem; border-radius: 6px;
+    font-size: 0.95rem; font-weight: 700;
+    text-decoration: none; white-space: nowrap;
+    transition: all 0.2s; flex-shrink: 0;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .btn-white:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+
+  /* FOOTER */
+  footer {
+    position: relative; z-index: 1;
+    border-top: 1px solid rgba(255,255,255,0.07);
+    padding: 2.5rem 5rem;
+    display: flex; align-items: center; justify-content: space-between;
+    color: var(--text-muted); font-size: 0.84rem;
+  }
+  .footer-logo { font-family: 'DM Serif Display', serif; font-size: 1.1rem; color: var(--off-white); }
+
+  /* RESPONSIVE */
+  @media(max-width: 900px) {
+    .hero { grid-template-columns:1fr; padding: 7rem 2rem 3rem; }
+    .hero-visual { display: none; }
+    .section { padding: 4rem 2rem; }
+    .features-grid { grid-template-columns: 1fr; }
+    .steps { grid-template-columns: 1fr 1fr; }
+    .portals { grid-template-columns: 1fr; }
+    .cta-strip { flex-direction: column; gap: 1.5rem; margin: 2rem; text-align: center; }
+    nav { padding: 1rem 1.5rem; }
+    footer { flex-direction: column; gap: 1rem; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">
+    <div class="logo-drop"></div>
+    Blood<em style="color:var(--crimson-light);font-style:normal;">Link</em>
+  </a>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#how-it-works">How it Works</a>
+    <a href="#portals">Portals</a>
+    <a href="pages/login.html" class="btn-nav">Sign In</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-text">
+    <div class="hero-badge"><span class="badge-dot"></span> AI-Powered Platform Live</div>
+    <h1>Smart Blood<br/><em>Donor Matching</em><br/>Saves Lives</h1>
+    <p class="hero-sub">Blood Link uses machine learning to screen donor eligibility and match donors to hospital requests instantly — reducing manual effort, delays, and critical errors.</p>
+    <div class="hero-actions">
+      <a href="pages/register.html" class="btn-primary">Become a Donor →</a>
+      <a href="pages/login.html" class="btn-outline">Hospital Login</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item">
+        <div class="stat-num">90%+</div>
+        <div class="stat-label">AI Accuracy</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">&lt;2s</div>
+        <div class="stat-label">Match Time</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">8</div>
+        <div class="stat-label">Blood Types</div>
+      </div>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="drop-container">
+      <div class="drop-glow"></div>
+      <div class="drop-rings">
+        <div class="ring"></div><div class="ring"></div><div class="ring"></div>
+      </div>
+      <div class="drop-main"></div>
+      <div class="info-pill pill-1">
+        <div class="pill-label">Blood Type</div>
+        <div class="pill-val">A+ Match Found</div>
+      </div>
+      <div class="info-pill pill-2">
+        <div class="pill-label">AI Score</div>
+        <div class="pill-val">94.2%</div>
+      </div>
+      <div class="info-pill pill-3">
+        <div class="pill-label">Eligibility</div>
+        <div class="pill-val">✓ Approved</div>
+      </div>
+      <div class="info-pill pill-4">
+        <div class="pill-label">Distance</div>
+        <div class="pill-val">2.3 km away</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section" id="features">
+  <div class="section-label">Core Capabilities</div>
+  <div class="section-title">Built for speed.<br/>Designed to save lives.</div>
+  <div class="section-sub">Every feature is purpose-built for blood bank operations, donor coordination, and hospital emergencies.</div>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🧠</div>
+      <div class="feature-title">AI Eligibility Screening</div>
+      <div class="feature-desc">Machine learning evaluates age, weight, hemoglobin, donation frequency, and medical history to instantly determine donor eligibility.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🎯</div>
+      <div class="feature-title">Smart Donor Matching</div>
+      <div class="feature-desc">Ranking algorithm scores donors by blood type compatibility, geographic proximity, and availability for each hospital request.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🏥</div>
+      <div class="feature-title">Hospital Request Portal</div>
+      <div class="feature-desc">Hospitals submit blood requests and instantly receive a prioritized list of matched, eligible donors ready to respond.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📦</div>
+      <div class="feature-title">Inventory Tracking</div>
+      <div class="feature-desc">Real-time blood inventory dashboard shows available units by type, expiry, and location across all registered banks.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔔</div>
+      <div class="feature-title">Automated Alerts</div>
+      <div class="feature-desc">Email and SMS notifications automatically contact matched donors for urgent requests and send donation reminders.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔐</div>
+      <div class="feature-title">Secure JWT Auth</div>
+      <div class="feature-desc">Role-based access control with JWT tokens separates donor, hospital, and admin portals securely.</div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section" id="how-it-works" style="background: rgba(255,255,255,0.015); border-top:1px solid rgba(255,255,255,0.05); border-bottom:1px solid rgba(255,255,255,0.05);">
+  <div class="section-label">Process</div>
+  <div class="section-title">From registration<br/>to matched donor in seconds.</div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-connector"></div>
+      <div class="step-num">01 — DONOR</div>
+      <div class="step-title">Register & Submit Health Info</div>
+      <div class="step-desc">Donors create a profile with age, weight, hemoglobin, and donation history.</div>
+    </div>
+    <div class="step">
+      <div class="step-connector"></div>
+      <div class="step-num">02 — AI</div>
+      <div class="step-title">Eligibility Screening</div>
+      <div class="step-desc">Python ML model instantly evaluates eligibility and flags any disqualifying factors.</div>
+    </div>
+    <div class="step">
+      <div class="step-connector"></div>
+      <div class="step-num">03 — HOSPITAL</div>
+      <div class="step-title">Submit Blood Request</div>
+      <div class="step-desc">Hospital staff create a request specifying blood type, quantity, and urgency.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">04 — MATCH</div>
+      <div class="step-title">Ranked Donor List + Notify</div>
+      <div class="step-desc">System scores and ranks eligible donors. Automated alerts sent to top matches.</div>
+    </div>
+  </div>
+</section>
+
+<!-- PORTALS -->
+<section class="section" id="portals">
+  <div class="section-label">Access Portals</div>
+  <div class="section-title">Three roles.<br/>One unified system.</div>
+  <div class="portals">
+    <div class="portal-card">
+      <span class="portal-emoji">🩸</span>
+      <div class="portal-title">Donor Portal</div>
+      <div class="portal-desc">Register, track your donation history, view eligibility status, and receive alerts when your blood type is needed.</div>
+      <a href="pages/donor-dashboard.html" class="portal-link">Access Portal →</a>
+    </div>
+    <div class="portal-card">
+      <span class="portal-emoji">🏥</span>
+      <div class="portal-title">Hospital Portal</div>
+      <div class="portal-desc">Submit urgent blood requests, view AI-matched donor lists, and monitor blood inventory levels in real time.</div>
+      <a href="pages/hospital-dashboard.html" class="portal-link">Access Portal →</a>
+    </div>
+    <div class="portal-card">
+      <span class="portal-emoji">⚙️</span>
+      <div class="portal-title">Admin Panel</div>
+      <div class="portal-desc">Manage all users, monitor system activity, generate reports, and oversee the entire platform from a central dashboard.</div>
+      <a href="pages/admin-dashboard.html" class="portal-link">Access Panel →</a>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-strip">
+  <div class="cta-text">
+    <h2>Ready to save lives?</h2>
+    <p>Join Blood Link today as a donor or hospital partner.</p>
+  </div>
+  <a href="pages/register.html" class="btn-white">Register Now →</a>
+</div>
+
+<footer>
+  <div class="footer-logo">Blood<span style="color:var(--crimson-light)">Link</span></div>
+  <div>AI-Powered Blood Bank Management · Lincoln University College · 2025</div>
+  <div>Saramsh Puri · LCID: LC00017002058</div>
+</footer>
+
+</body>
+</html>

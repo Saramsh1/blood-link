@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Donor Dashboard — Blood Link</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+  :root{--crimson:#C0152A;--crimson-light:#E8304A;--blood-deep:#1A0508;--surface:#230A0E;--surface2:#2D0F14;--off-white:#FAF7F4;--text-muted:#7A6B65;--success:#1A7A4A;--warn:#B8600A;--border:rgba(255,255,255,0.07);}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:var(--blood-deep);color:var(--off-white);min-height:100vh;display:flex;}
+  /* SIDEBAR */
+  .sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:1.5rem 0;flex-shrink:0;}
+  .sb-logo{font-family:'DM Serif Display',serif;font-size:1.3rem;padding:0 1.5rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.5rem;}
+  .logo-drop{width:18px;height:18px;background:var(--crimson);clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);}
+  .sb-section{padding:.8rem 1.5rem .4rem;font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);}
+  .sb-item{display:flex;align-items:center;gap:.7rem;padding:.65rem 1.5rem;cursor:pointer;transition:all .2s;color:#C4B8B2;font-size:.9rem;text-decoration:none;}
+  .sb-item:hover,.sb-item.active{background:rgba(192,21,42,.12);color:var(--off-white);border-right:3px solid var(--crimson);}
+  .sb-item.active{color:var(--crimson-light);}
+  .sb-footer{margin-top:auto;padding:1.5rem;border-top:1px solid var(--border);}
+  .sb-avatar{width:36px;height:36px;background:var(--crimson);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;}
+  .sb-user{display:flex;align-items:center;gap:.8rem;}
+  .sb-user-info .name{font-weight:600;font-size:.88rem;}
+  .sb-user-info .role{font-size:.74rem;color:var(--text-muted);}
+  /* MAIN */
+  .main{flex:1;overflow-y:auto;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:1.5rem 2rem;border-bottom:1px solid var(--border);background:rgba(26,5,8,.8);backdrop-filter:blur(8px);position:sticky;top:0;z-index:10;}
+  .topbar h1{font-family:'DM Serif Display',serif;font-size:1.4rem;}
+  .topbar-actions{display:flex;align-items:center;gap:1rem;}
+  .notif-btn{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:6px;padding:.5rem .75rem;cursor:pointer;color:var(--off-white);font-size:.85rem;position:relative;}
+  .notif-dot{position:absolute;top:-3px;right:-3px;width:8px;height:8px;background:var(--crimson);border-radius:50%;}
+  .content{padding:2rem;}
+  /* CARDS */
+  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.4rem;transition:border-color .2s;}
+  .stat-card:hover{border-color:rgba(192,21,42,.3);}
+  .sc-label{font-size:.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.4rem;}
+  .sc-val{font-family:'DM Serif Display',serif;font-size:1.8rem;}
+  .sc-sub{font-size:.78rem;color:var(--text-muted);margin-top:.2rem;}
+  /* ELIGIBILITY CARD */
+  .elig-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.8rem;margin-bottom:2rem;display:grid;grid-template-columns:1fr auto;gap:2rem;align-items:center;}
+  .elig-title{font-weight:600;font-size:1rem;margin-bottom:.3rem;}
+  .elig-badge{display:inline-flex;align-items:center;gap:.5rem;background:rgba(26,122,74,.15);border:1px solid rgba(26,122,74,.35);color:#4ADE80;padding:.4rem 1rem;border-radius:100px;font-size:.82rem;font-weight:600;margin-bottom:.8rem;}
+  .elig-params{display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem;margin-top:1rem;}
+  .ep-item{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:.7rem 1rem;}
+  .ep-label{font-size:.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;}
+  .ep-val{font-family:'JetBrains Mono',monospace;font-size:.95rem;font-weight:600;margin-top:.2rem;}
+  .ep-val.ok{color:#4ADE80;} .ep-val.warn{color:#FBBF24;} .ep-val.fail{color:var(--crimson-light);}
+  .next-eligible{text-align:center;}
+  .ne-label{font-size:.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;}
+  .ne-countdown{font-family:'JetBrains Mono',monospace;font-size:2.2rem;font-weight:600;color:var(--crimson-light);margin:.4rem 0;}
+  .ne-sub{font-size:.8rem;color:var(--text-muted);}
+  /* HISTORY TABLE */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin-bottom:2rem;}
+  .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;}
+  .card-title-text{font-weight:600;font-size:1rem;}
+  .btn-sm{background:rgba(192,21,42,.15);border:1px solid rgba(192,21,42,.3);color:var(--crimson-light);padding:.4rem .9rem;border-radius:5px;font-size:.8rem;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;}
+  table{width:100%;border-collapse:collapse;}
+  th{font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);padding:.6rem .8rem;text-align:left;border-bottom:1px solid var(--border);}
+  td{padding:.75rem .8rem;font-size:.88rem;border-bottom:1px solid rgba(255,255,255,.04);}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:rgba(255,255,255,.025);}
+  .badge{display:inline-flex;align-items:center;gap:.3rem;padding:.25rem .65rem;border-radius:100px;font-size:.75rem;font-weight:600;}
+  .badge-green{background:rgba(26,122,74,.2);color:#4ADE80;border:1px solid rgba(74,222,128,.2);}
+  .badge-red{background:rgba(192,21,42,.2);color:var(--crimson-light);border:1px solid rgba(232,48,74,.2);}
+  .badge-yellow{background:rgba(184,96,10,.2);color:#FBBF24;border:1px solid rgba(251,191,36,.2);}
+  /* NOTIFICATIONS */
+  .notif-item{display:flex;gap:1rem;padding:.9rem 0;border-bottom:1px solid var(--border);}
+  .notif-item:last-child{border-bottom:none;}
+  .notif-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
+  .notif-urgent{background:rgba(192,21,42,.2);}
+  .notif-info{background:rgba(26,122,74,.2);}
+  .notif-text .title{font-weight:600;font-size:.9rem;margin-bottom:.2rem;}
+  .notif-text .desc{font-size:.82rem;color:#A09088;line-height:1.5;}
+  .notif-text .time{font-size:.74rem;color:var(--text-muted);margin-top:.2rem;font-family:'JetBrains Mono',monospace;}
+  /* UPDATE HEALTH MODAL */
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center;}
+  .modal-bg.open{display:flex;}
+  .modal{background:var(--surface);border:1px solid rgba(192,21,42,.3);border-radius:12px;padding:2rem;width:100%;max-width:480px;position:relative;}
+  .modal h3{font-family:'DM Serif Display',serif;font-size:1.4rem;margin-bottom:.3rem;}
+  .modal .sub{color:#A09088;font-size:.85rem;margin-bottom:1.4rem;}
+  .close-modal{position:absolute;top:1rem;right:1rem;background:none;border:none;color:#A09088;font-size:1.2rem;cursor:pointer;}
+  .form-group{margin-bottom:1rem;}
+  label{display:block;font-size:.77rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#A09088;margin-bottom:.4rem;}
+  input,select{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:.65rem .9rem;color:var(--off-white);font-size:.9rem;font-family:'DM Sans',sans-serif;}
+  input:focus,select:focus{outline:none;border-color:var(--crimson);}
+  select option{background:#230A0E;}
+  .btn-primary{background:var(--crimson);color:white;border:none;padding:.75rem 1.5rem;border-radius:6px;font-size:.9rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s;}
+  .btn-primary:hover{background:var(--crimson-light);}
+  @media(max-width:900px){.sidebar{display:none;}.stats-row{grid-template-columns:1fr 1fr;}.elig-card{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="sb-logo"><div class="logo-drop"></div>BloodLink</div>
+  <div class="sb-section">Donor Menu</div>
+  <a class="sb-item active" href="#">📊 Dashboard</a>
+  <a class="sb-item" href="#" onclick="openModal()">❤️ Update Health Info</a>
+  <a class="sb-item" href="#">📋 Donation History</a>
+  <a class="sb-item" href="#">🔔 Notifications</a>
+  <a class="sb-item" href="#">📍 Nearby Centers</a>
+  <div class="sb-section">Account</div>
+  <a class="sb-item" href="#">👤 Profile</a>
+  <a class="sb-item" href="#">⚙️ Settings</a>
+  <div class="sb-footer">
+    <div class="sb-user">
+      <div class="sb-avatar">SP</div>
+      <div class="sb-user-info">
+        <div class="name">Saramsh Puri</div>
+        <div class="role">Donor · A+</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <h1>Donor Dashboard</h1>
+    <div class="topbar-actions">
+      <button class="notif-btn" onclick="document.getElementById('notif-section').scrollIntoView({behavior:'smooth'})">
+        🔔 Alerts <div class="notif-dot"></div>
+      </button>
+      <a href="login.html" style="background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:6px;padding:.5rem .75rem;font-size:.85rem;color:var(--off-white);text-decoration:none;">Sign Out</a>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="sc-label">Total Donations</div>
+        <div class="sc-val">7</div>
+        <div class="sc-sub">Lifetime donations</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">Lives Saved (est.)</div>
+        <div class="sc-val" style="color:#E8304A;">21</div>
+        <div class="sc-sub">3 lives per donation</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">Blood Type</div>
+        <div class="sc-val">A+</div>
+        <div class="sc-sub">Universal recipient</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">Next Eligible</div>
+        <div class="sc-val">18d</div>
+        <div class="sc-sub">Mar 30, 2025</div>
+      </div>
+    </div>
+
+    <!-- ELIGIBILITY -->
+    <div class="elig-card">
+      <div>
+        <div class="elig-title">AI Eligibility Status</div>
+        <div class="elig-badge">✓ Eligible to Donate</div>
+        <div style="font-size:.86rem;color:#A09088;line-height:1.6;">All your health parameters are within the acceptable range. You are cleared for donation when the cooldown period ends.</div>
+        <div class="elig-params">
+          <div class="ep-item"><div class="ep-label">Age</div><div class="ep-val ok">24 yrs ✓</div></div>
+          <div class="ep-item"><div class="ep-label">Weight</div><div class="ep-val ok">68 kg ✓</div></div>
+          <div class="ep-item"><div class="ep-label">Hemoglobin</div><div class="ep-val ok">14.2 g/dL ✓</div></div>
+          <div class="ep-item"><div class="ep-label">Last Donation</div><div class="ep-val warn">38 days ago</div></div>
+          <div class="ep-item"><div class="ep-label">Medical History</div><div class="ep-val ok">None ✓</div></div>
+          <div class="ep-item"><div class="ep-label">AI Confidence</div><div class="ep-val ok">96.3%</div></div>
+        </div>
+      </div>
+      <div class="next-eligible">
+        <div class="ne-label">Eligible In</div>
+        <div class="ne-countdown" id="countdown">18d 04h</div>
+        <div class="ne-sub">Mar 30, 2025</div>
+        <button class="btn-primary" style="margin-top:1rem;font-size:.82rem;padding:.55rem 1rem;" onclick="openModal()">Update Health Info</button>
+      </div>
+    </div>
+
+    <!-- 2-col grid -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+      <!-- DONATION HISTORY -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title-text">Donation History</div>
+          <button class="btn-sm">View All</button>
+        </div>
+        <table>
+          <thead><tr><th>Date</th><th>Location</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>12 Jan 2025</td><td>KL Blood Bank</td><td><span class="badge badge-green">✓ Completed</span></td></tr>
+            <tr><td>18 Oct 2024</td><td>Pantai Hospital</td><td><span class="badge badge-green">✓ Completed</span></td></tr>
+            <tr><td>05 Jul 2024</td><td>KLCC Donation Drive</td><td><span class="badge badge-green">✓ Completed</span></td></tr>
+            <tr><td>22 Mar 2024</td><td>KL Blood Bank</td><td><span class="badge badge-green">✓ Completed</span></td></tr>
+            <tr><td>14 Nov 2023</td><td>Gleneagles Hospital</td><td><span class="badge badge-red">✗ No-show</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- NOTIFICATIONS -->
+      <div class="card" id="notif-section">
+        <div class="card-header">
+          <div class="card-title-text">Notifications & Alerts</div>
+          <button class="btn-sm">Mark All Read</button>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon notif-urgent">🚨</div>
+          <div class="notif-text">
+            <div class="title">URGENT: A+ Blood Needed</div>
+            <div class="desc">Pantai Hospital needs A+ blood within 24 hours for emergency surgery.</div>
+            <div class="time">2 hours ago</div>
+          </div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon notif-info">✅</div>
+          <div class="notif-text">
+            <div class="title">Donation Confirmed</div>
+            <div class="desc">Your Jan 12 donation at KL Blood Bank has been processed. Thank you!</div>
+            <div class="time">14 Jan 2025</div>
+          </div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon notif-urgent">⏰</div>
+          <div class="notif-text">
+            <div class="title">Donation Reminder</div>
+            <div class="desc">You'll be eligible to donate again in 18 days. Schedule an appointment now.</div>
+            <div class="time">Yesterday</div>
+          </div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon notif-info">🧠</div>
+          <div class="notif-text">
+            <div class="title">Health Check Reminder</div>
+            <div class="desc">Please update your hemoglobin level to keep your eligibility status current.</div>
+            <div class="time">3 days ago</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEARBY REQUESTS -->
+    <div class="card" style="margin-top:0;">
+      <div class="card-header">
+        <div class="card-title-text">Blood Requests Matching Your Type (A+)</div>
+        <span class="badge badge-red" style="font-size:.78rem;">3 Urgent</span>
+      </div>
+      <table>
+        <thead><tr><th>Hospital</th><th>Blood Type</th><th>Units Needed</th><th>Distance</th><th>Urgency</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Pantai Hospital KL</td>
+            <td>A+</td>
+            <td>3 units</td>
+            <td>2.3 km</td>
+            <td><span class="badge badge-red">🚨 Critical</span></td>
+            <td><button class="btn-primary" style="font-size:.78rem;padding:.35rem .8rem;">Respond</button></td>
+          </tr>
+          <tr>
+            <td>KLCC Medical Centre</td>
+            <td>A+ / O+</td>
+            <td>2 units</td>
+            <td>5.1 km</td>
+            <td><span class="badge badge-yellow">⚠ Urgent</span></td>
+            <td><button class="btn-primary" style="font-size:.78rem;padding:.35rem .8rem;">Respond</button></td>
+          </tr>
+          <tr>
+            <td>Gleneagles Hospital</td>
+            <td>A+</td>
+            <td>1 unit</td>
+            <td>8.7 km</td>
+            <td><span class="badge badge-yellow">⚠ Moderate</span></td>
+            <td><button class="btn-primary" style="font-size:.78rem;padding:.35rem .8rem;">Respond</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- UPDATE HEALTH MODAL -->
+<div class="modal-bg" id="health-modal">
+  <div class="modal">
+    <button class="close-modal" onclick="closeModal()">✕</button>
+    <h3>Update Health Information</h3>
+    <div class="sub">Update your parameters for re-assessment by the AI eligibility model.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+      <div class="form-group"><label>Weight (kg)</label><input type="number" placeholder="68" id="m_weight"/></div>
+      <div class="form-group"><label>Hemoglobin (g/dL)</label><input type="number" placeholder="14.2" step="0.1" id="m_hb"/></div>
+      <div class="form-group"><label>Last Donation Date</label><input type="date" id="m_last_donation"/></div>
+      <div class="form-group"><label>Current Health Status</label>
+        <select id="m_status">
+          <option>Healthy — No issues</option>
+          <option>Minor illness (cold/flu)</option>
+          <option>Recovering from illness</option>
+          <option>On medication</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="saveHealth()" style="width:100%;margin-top:.5rem;">Save & Re-assess →</button>
+  </div>
+</div>
+
+<script>
+function openModal(){ document.getElementById('health-modal').classList.add('open'); }
+function closeModal(){ document.getElementById('health-modal').classList.remove('open'); }
+function saveHealth(){
+  alert('✅ Health information updated. AI re-assessment complete: Still Eligible.');
+  closeModal();
+}
+// Countdown timer
+function updateCountdown(){
+  const target = new Date('2025-03-30');
+  const now = new Date();
+  const diff = target - now;
+  if(diff <= 0){ document.getElementById('countdown').textContent = 'NOW'; return; }
+  const d = Math.floor(diff/86400000);
+  const h = Math.floor((diff%86400000)/3600000);
+  document.getElementById('countdown').textContent = `${d}d ${h}h`;
+}
+updateCountdown();
+setInterval(updateCountdown, 60000);
+document.getElementById('health-modal').addEventListener('click', function(e){ if(e.target === this) closeModal(); });
+</script>
+</body>
+</html>

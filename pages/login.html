@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Sign In — Blood Link</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+  :root{--crimson:#C0152A;--crimson-dark:#8B0E1D;--crimson-light:#E8304A;--blood-deep:#1A0508;--off-white:#FAF7F4;--warm-gray:#E8E2DC;--text-muted:#7A6B65;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:var(--blood-deep);color:var(--off-white);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;}
+  body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 70% 70% at 30% 50%,rgba(192,21,42,0.12) 0%,transparent 60%);pointer-events:none;}
+  .container{position:relative;z-index:1;display:grid;grid-template-columns:1fr 1fr;max-width:960px;width:100%;border:1px solid rgba(192,21,42,0.2);border-radius:16px;overflow:hidden;}
+  .left-panel{background:var(--crimson);padding:3.5rem;display:flex;flex-direction:column;justify-content:space-between;}
+  .left-panel .logo{font-family:'DM Serif Display',serif;font-size:1.8rem;display:flex;align-items:center;gap:.6rem;}
+  .logo-drop{width:24px;height:24px;background:white;clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);}
+  .left-content{margin-top:3rem;}
+  .left-content h2{font-family:'DM Serif Display',serif;font-size:2.4rem;line-height:1.15;margin-bottom:1rem;}
+  .left-content p{opacity:.85;font-size:.95rem;line-height:1.65;}
+  .role-badges{display:flex;flex-direction:column;gap:.6rem;margin-top:2.5rem;}
+  .role-badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:.7rem 1rem;font-size:.84rem;display:flex;align-items:center;gap:.6rem;}
+  .right-panel{background:rgba(26,5,8,.95);padding:3.5rem;}
+  .right-panel h3{font-family:'DM Serif Display',serif;font-size:1.8rem;margin-bottom:.4rem;}
+  .right-panel .sub{color:#A09088;font-size:.9rem;margin-bottom:2rem;}
+  .role-tabs{display:flex;gap:.4rem;margin-bottom:2rem;background:rgba(255,255,255,.04);border-radius:8px;padding:.3rem;}
+  .role-tab{flex:1;padding:.55rem;border:none;background:transparent;color:#A09088;border-radius:6px;cursor:pointer;font-size:.84rem;font-weight:500;transition:all .2s;font-family:'DM Sans',sans-serif;}
+  .role-tab.active{background:var(--crimson);color:white;}
+  .form-group{margin-bottom:1.2rem;}
+  label{display:block;font-size:.8rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#A09088;margin-bottom:.5rem;}
+  input{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:.75rem 1rem;color:var(--off-white);font-size:.95rem;font-family:'DM Sans',sans-serif;transition:border-color .2s,background .2s;}
+  input:focus{outline:none;border-color:var(--crimson);background:rgba(192,21,42,.08);}
+  input::placeholder{color:#5A4D49;}
+  .btn-login{width:100%;background:var(--crimson);color:white;border:none;padding:.9rem;border-radius:6px;font-size:.95rem;font-weight:600;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;margin-top:.5rem;}
+  .btn-login:hover{background:var(--crimson-light);transform:translateY(-1px);}
+  .divider{text-align:center;color:#5A4D49;font-size:.82rem;margin:1.2rem 0;position:relative;}
+  .divider::before,.divider::after{content:'';position:absolute;top:50%;width:42%;height:1px;background:rgba(255,255,255,.08);}
+  .divider::before{left:0;} .divider::after{right:0;}
+  .signup-link{text-align:center;font-size:.88rem;color:#A09088;margin-top:1.2rem;}
+  .signup-link a{color:var(--crimson-light);text-decoration:none;font-weight:600;}
+  .error-msg{background:rgba(192,21,42,.15);border:1px solid rgba(192,21,42,.4);border-radius:6px;padding:.7rem 1rem;font-size:.84rem;color:#E8304A;margin-bottom:1rem;display:none;}
+  @media(max-width:700px){.container{grid-template-columns:1fr;}.left-panel{display:none;}}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="left-panel">
+    <div class="logo"><div class="logo-drop"></div>BloodLink</div>
+    <div class="left-content">
+      <h2>Welcome back to Blood Link</h2>
+      <p>AI-powered donor matching and blood bank management for hospitals and donors.</p>
+      <div class="role-badges">
+        <div class="role-badge">🩸 Donors — Track eligibility & history</div>
+        <div class="role-badge">🏥 Hospitals — Manage requests & inventory</div>
+        <div class="role-badge">⚙️ Admins — Full system oversight</div>
+      </div>
+    </div>
+    <div style="font-size:.75rem;opacity:.6;">© 2025 Blood Link · Lincoln University College</div>
+  </div>
+  <div class="right-panel">
+    <h3>Sign In</h3>
+    <div class="sub">Select your role and enter credentials</div>
+    <div class="role-tabs">
+      <button class="role-tab active" onclick="setRole('donor',this)">🩸 Donor</button>
+      <button class="role-tab" onclick="setRole('hospital',this)">🏥 Hospital</button>
+      <button class="role-tab" onclick="setRole('admin',this)">⚙️ Admin</button>
+    </div>
+    <div class="error-msg" id="error">Invalid email or password. Please try again.</div>
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" id="email" placeholder="you@example.com"/>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="password" placeholder="••••••••"/>
+    </div>
+    <button class="btn-login" onclick="doLogin()">Sign In →</button>
+    <div class="divider">or</div>
+    <div class="signup-link">New donor? <a href="register.html">Create account →</a></div>
+    <div class="signup-link" style="margin-top:.6rem;font-size:.8rem;color:#5A4D49;">
+      Demo — Donor: donor@demo.com / pass123 &nbsp;|&nbsp; Admin: admin@demo.com / admin123
+    </div>
+  </div>
+</div>
+<script>
+let currentRole = 'donor';
+function setRole(role, btn) {
+  currentRole = role;
+  document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+}
+function doLogin() {
+  async function doLogin() {
+    const email = document.getElementById('email').value.trim();
+    const pwd = document.getElementById('password').value;
+    const err = document.getElementById('error');
+    err.style.display = 'none';
+
+    if (!email || !pwd) { 
+        err.textContent = 'Please fill in all fields.'; 
+        err.style.display = 'block'; 
+        return; 
+    }
+
+    try {
+        const response = await fetch('http://localhost:8000/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password: pwd })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            localStorage.setItem('bl_token', data.token);
+            localStorage.setItem('bl_role', data.user.role);
+            localStorage.setItem('bl_name', data.user.name);
+
+            if (data.user.role === 'donor') 
+                window.location.href = 'donor-dashboard.html';
+            else if (data.user.role === 'hospital') 
+                window.location.href = 'hospital-dashboard.html';
+            else 
+                window.location.href = 'admin-dashboard.html';
+        } else {
+            err.textContent = data.message || 'Invalid credentials.';
+            err.style.display = 'block';
+        }
+    } catch (e) {
+        err.textContent = 'Cannot connect to server. Make sure Laravel is running.';
+        err.style.display = 'block';
+    }
+}
+  }
+}
+document.addEventListener('keydown', e => { if(e.key === 'Enter') doLogin(); });
+</script>
+</body>
+</html>
